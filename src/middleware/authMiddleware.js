@@ -17,7 +17,7 @@ module.exports = async (req, res, next) => {
     req.user = {
       id: user.id,
       email: user.email,
-      roles: user.Roles.map((r) => r.name)
+      roles: user.Roles.map((r) => r.code)
     };
     next();
   } catch (error) {
