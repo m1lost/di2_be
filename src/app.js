@@ -4,6 +4,7 @@ const path = require('path');
 
 const authRoutes = require('./routes/authRoutes');
 const roleRoutes = require('./routes/roleRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
@@ -30,5 +31,6 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/roles', roleRoutes);
+app.use('/api/users', userRoutes);
 
 module.exports = app;
