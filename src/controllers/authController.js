@@ -1,4 +1,4 @@
-const { User, Role, UserRole } = require('../models');
+const { User, Role, UserRole, Menu } = require('../models');
 const {
   generatenikToken,
   verifynikToken,
@@ -172,6 +172,55 @@ exports.selectRole = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({
+      error: error.message
+    });
+  }
+};
+
+exports.getMyMenus = async (req, res) => {
+  try {
+    const activeRole = req.user.role;
+
+    if (!activeRole) {
+      return res.status(403).json({
+        message: 'Please select a role first'
+      });
+    }
+
+    const role = await Role.findOne({
+      where: {
+        code: activeRole,
+        isActive: true
+      },
+      include: [
+        {
+          model: Menu,
+          where: {
+            isActive: true
+          },
+          through: {
+            attributes: []
+          },
+          required: false
+        }
+      ]
+    });
+
+    if (!role) {
+      return res.status(404).json({
+        message: 'Role not found'
+      });
+    }
+
+    return res.status(200).json({
+      role: role.code,
+      menus: role.Menus
+    });
+  } catch (error) {
+    console.error('Get my menus error:', error);
+
+    return res.status(500).json({
+      message: 'Failed to retrieve menus',
       error: error.message
     });
   }

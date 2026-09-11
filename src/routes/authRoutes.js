@@ -12,5 +12,6 @@ router.post(
 );
 
 router.post('/select-role', authMiddleware, authController.selectRole);
+router.get('/my-menus', authMiddleware, authController.getMyMenus);
 
 module.exports = router;
