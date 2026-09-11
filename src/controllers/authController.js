@@ -113,11 +113,17 @@ exports.login = async (req, res) => {
 
     // validasi password
     const isMatch = await user.comparePassword(password);
+    const activeRoles = user.Roles.filter((role) => role.isActive);
 
     if (!user.isActive)
       return res.status(403).json({ message: 'Account is not active' });
     if (!isMatch)
       return res.status(400).json({ message: 'Invalid NIKr password' });
+
+    if (activeRoles.length === 0)
+      return res
+        .status(403)
+        .json({ message: 'User does not have an active role' });
 
     // generate token untuk autentikasi (misal JWT)
     const authToken = generateAccessToken(user);
