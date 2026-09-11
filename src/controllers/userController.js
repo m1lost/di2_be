@@ -157,7 +157,7 @@ exports.getById = async (req, res) => {
   }
 };
 
-// Update toogle Users isActive
+// Update toggle Users isActive
 exports.toggleActive = async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id);
@@ -170,7 +170,10 @@ exports.toggleActive = async (req, res) => {
 
     user.isActive = !user.isActive;
     await user.save();
-    res.json(user);
+
+    const { password, ...userWithoutPassword } = user.toJSON();
+
+    res.json(userWithoutPassword);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -331,18 +334,45 @@ exports.setRoles = async (req, res) => {
   try {
     const { roleIds } = req.body;
     const user = await User.findByPk(req.params.id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    const roles = await Role.findAll({ where: { id: roleIds } });
+    if (!user) {
+      return res.status(404).json({
+        message: 'User not found'
+      });
+    }
+
+    const roles = await Role.findAll({
+      where: {
+        id: roleIds
+      }
+    });
+
     if (roles.length !== roleIds.length) {
-      return res.status(404).json({ message: 'roles not found' });
+      return res.status(404).json({
+        message: 'Roles not found'
+      });
     }
 
     await user.setRoles(roles);
 
-    const updated = await User.findByPk(req.params.id, { include: Role });
-    res.json(updated);
+    const updated = await User.findByPk(req.params.id, {
+      attributes: {
+        exclude: ['password']
+      },
+      include: [
+        {
+          model: Role,
+          through: {
+            attributes: []
+          }
+        }
+      ]
+    });
+
+    return res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({
+      error: error.message
+    });
   }
 };

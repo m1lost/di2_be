@@ -25,7 +25,7 @@ module.exports = async (req, res, next) => {
       });
     }
 
-    const userRoles = user.Roles.map((r) => r.code);
+    const userRoles = user.Roles.filter((r) => r.isActive).map((r) => r.code);
 
     // Jika token ACCESS punya active role,
     // pastikan role tersebut masih dimiliki user

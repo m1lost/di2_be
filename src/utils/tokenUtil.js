@@ -31,7 +31,7 @@ exports.generateAccessToken = (user) => {
       {
         id: user.id,
         nik: user.nik,
-        roles: user.Roles?.map((r) => r.code) || []
+        roles: user.Roles?.filter((r) => r.isActive).map((r) => r.code) || []
       },
       process.env.JWT_SECRET,
       { expiresIn: '2h' }

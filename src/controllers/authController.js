@@ -160,15 +160,16 @@ exports.selectRole = async (req, res) => {
       });
     }
 
-    const selectedRole = user.Roles.find((item) => item.code === role);
+    const selectedRole = user.Roles.find(
+      (item) => item.code === role && item.isActive
+    );
 
     if (!selectedRole) {
       return res.status(403).json({
-        message: 'Role is not assigned to this user'
+        message: 'Role is not assigned or inactive'
       });
     }
 
-    // generate token baru dengan active role
     const token = generateRoleToken(user, selectedRole.code);
 
     return res.status(200).json({

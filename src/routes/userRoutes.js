@@ -32,6 +32,7 @@ router.put(
 router.put(
   '/:id/change-password',
   authMiddleware,
+  rbacMiddleware('ADMIN'),
   validateBody(['password']),
   userController.updatePassword
 );

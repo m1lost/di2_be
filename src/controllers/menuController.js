@@ -143,7 +143,6 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const { id } = req.params;
-
     const { parentId, code, name, path, sortOrder } = req.body;
 
     const menu = await Menu.findByPk(id);
@@ -168,7 +167,7 @@ exports.update = async (req, res) => {
       });
     }
 
-    if (parentId) {
+    if (parentId !== undefined) {
       if (parentId === id) {
         return res.status(400).json({
           success: false,
@@ -176,17 +175,35 @@ exports.update = async (req, res) => {
         });
       }
 
-      const parentMenu = await Menu.findByPk(parentId);
+      if (parentId !== null) {
+        const parentMenu = await Menu.findByPk(parentId);
 
-      if (!parentMenu) {
-        return res.status(404).json({
-          success: false,
-          message: 'Parent menu not found'
-        });
+        if (!parentMenu) {
+          return res.status(404).json({
+            success: false,
+            message: 'Parent menu not found'
+          });
+        }
+
+        // Prevent circular hierarchy
+        let currentParent = parentMenu;
+
+        while (currentParent) {
+          if (currentParent.id === id) {
+            return res.status(400).json({
+              success: false,
+              message: 'Circular menu hierarchy is not allowed'
+            });
+          }
+
+          if (!currentParent.parentId) {
+            break;
+          }
+
+          currentParent = await Menu.findByPk(currentParent.parentId);
+        }
       }
-    }
 
-    if (parentId !== undefined) {
       menu.parentId = parentId;
     }
 
