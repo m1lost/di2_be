@@ -40,4 +40,12 @@ router.patch(
   roleController.toggleStatus
 );
 
+router.put(
+  '/:id/menus',
+  authMiddleware,
+  trimMiddleware,
+  rbacMiddleware('ADMIN'),
+  roleController.setMenus
+);
+
 module.exports = router;

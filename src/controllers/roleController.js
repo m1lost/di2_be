@@ -1,9 +1,26 @@
-const { Role } = require('../models');
+const { Role, Menu } = require('../models');
 
 exports.getAll = async (req, res) => {
   try {
     const roles = await Role.findAll({
       attributes: ['id', 'code', 'name', 'isActive'],
+      include: [
+        {
+          model: Menu,
+          attributes: [
+            'id',
+            'parentId',
+            'code',
+            'name',
+            'path',
+            'sortOrder',
+            'isActive'
+          ],
+          through: {
+            attributes: []
+          }
+        }
+      ],
       order: [['name', 'ASC']]
     });
 
@@ -27,7 +44,24 @@ exports.getById = async (req, res) => {
     const { id } = req.params;
 
     const role = await Role.findByPk(id, {
-      attributes: ['id', 'code', 'name', 'isActive']
+      attributes: ['id', 'code', 'name', 'isActive'],
+      include: [
+        {
+          model: Menu,
+          attributes: [
+            'id',
+            'parentId',
+            'code',
+            'name',
+            'path',
+            'sortOrder',
+            'isActive'
+          ],
+          through: {
+            attributes: []
+          }
+        }
+      ]
     });
 
     if (!role) {
@@ -186,6 +220,54 @@ exports.toggleStatus = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to update role status'
+    });
+  }
+};
+
+exports.setMenus = async (req, res) => {
+  try {
+    const { menuIds } = req.body;
+
+    const role = await Role.findByPk(req.params.id);
+
+    if (!role) {
+      return res.status(404).json({
+        message: 'Role not found'
+      });
+    }
+
+    const menus = await Menu.findAll({
+      where: {
+        id: menuIds
+      }
+    });
+
+    if (menus.length !== menuIds.length) {
+      return res.status(404).json({
+        message: 'One or more menus not found'
+      });
+    }
+
+    await role.setMenus(menus);
+
+    const updated = await Role.findByPk(req.params.id, {
+      include: [
+        {
+          model: Menu,
+          through: {
+            attributes: []
+          }
+        }
+      ]
+    });
+
+    return res.status(200).json({
+      message: 'Role menus updated successfully',
+      data: updated
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message
     });
   }
 };
