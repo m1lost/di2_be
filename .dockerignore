@@ -1,0 +1,76 @@
+# =====================================
+# Environment / Secrets
+# =====================================
+
+.env
+.env.*
+!.env.example
+!.env.docker.example
+!.env.production.example
+
+*.pem
+*.key
+*.crt
+
+# =====================================
+# Node.js
+# =====================================
+
+node_modules/
+
+# =====================================
+# Logs
+# =====================================
+
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =====================================
+# Coverage / Tests
+# =====================================
+
+coverage/
+.nyc_output/
+
+# =====================================
+# Runtime / Uploads
+# =====================================
+
+uploads/*
+!uploads/.gitkeep
+
+tmp/
+temp/
+
+# =====================================
+# IDE / Editor
+# =====================================
+
+.vscode/
+.idea/
+
+*.swp
+*.swo
+
+# =====================================
+# Operating System
+# =====================================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Windows metadata
+*:Zone.Identifier
+*Zone.Identifier
+
+# =====================================
+# Docker local overrides
+# =====================================
+
+compose.override.yaml
+compose.override.yml
+docker-compose.override.yml
