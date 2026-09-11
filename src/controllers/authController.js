@@ -2,7 +2,8 @@ const { User, Role, UserRole } = require('../models');
 const {
   generatenikToken,
   verifynikToken,
-  generateAccessToken
+  generateAccessToken,
+  generateRoleToken
 } = require('../utils/tokenUtil');
 const { hasMaxLength, isValidPassword } = require('../utils/validation');
 
@@ -128,6 +129,49 @@ exports.login = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: 'Login error',
+      error: error.message
+    });
+  }
+};
+
+exports.selectRole = async (req, res) => {
+  try {
+    const { role } = req.body;
+
+    if (!role) {
+      return res.status(400).json({
+        message: 'Role is required'
+      });
+    }
+
+    const user = await User.findByPk(req.user.id, {
+      include: Role
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        message: 'User not found'
+      });
+    }
+
+    const selectedRole = user.Roles.find((item) => item.code === role);
+
+    if (!selectedRole) {
+      return res.status(403).json({
+        message: 'Role is not assigned to this user'
+      });
+    }
+
+    // generate token baru dengan active role
+    const token = generateRoleToken(user, selectedRole.code);
+
+    return res.status(200).json({
+      message: 'Role selected successfully',
+      role: selectedRole.code,
+      token
+    });
+  } catch (error) {
+    return res.status(500).json({
       error: error.message
     });
   }
