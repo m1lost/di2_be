@@ -31,13 +31,31 @@ exports.generateAccessToken = (user) => {
       {
         id: user.id,
         nik: user.nik,
-        roles: user.Roles?.map((r) => r.name) || []
+        roles: user.Roles?.filter((r) => r.isActive).map((r) => r.code) || []
       },
       process.env.JWT_SECRET,
       { expiresIn: '2h' }
     );
   } catch (error) {
     console.error('generate access token error:', error);
+    throw error;
+  }
+};
+
+exports.generateRoleToken = (user, role) => {
+  try {
+    return jwt.sign(
+      {
+        id: user.id,
+        nik: user.nik,
+        role,
+        tokenType: 'ACCESS'
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '2h' }
+    );
+  } catch (error) {
+    console.error('generate role token error:', error);
     throw error;
   }
 };

@@ -1,8 +1,9 @@
-const { User, Role, UserRole } = require('../models');
+const { User, Role, UserRole, Menu } = require('../models');
 const {
   generatenikToken,
   verifynikToken,
-  generateAccessToken
+  generateAccessToken,
+  generateRoleToken
 } = require('../utils/tokenUtil');
 const { hasMaxLength, isValidPassword } = require('../utils/validation');
 
@@ -112,11 +113,17 @@ exports.login = async (req, res) => {
 
     // validasi password
     const isMatch = await user.comparePassword(password);
+    const activeRoles = user.Roles.filter((role) => role.isActive);
 
     if (!user.isActive)
       return res.status(403).json({ message: 'Account is not active' });
     if (!isMatch)
       return res.status(400).json({ message: 'Invalid NIKr password' });
+
+    if (activeRoles.length === 0)
+      return res
+        .status(403)
+        .json({ message: 'User does not have an active role' });
 
     // generate token untuk autentikasi (misal JWT)
     const authToken = generateAccessToken(user);
@@ -128,6 +135,99 @@ exports.login = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: 'Login error',
+      error: error.message
+    });
+  }
+};
+
+exports.selectRole = async (req, res) => {
+  try {
+    const { role } = req.body;
+
+    if (!role) {
+      return res.status(400).json({
+        message: 'Role is required'
+      });
+    }
+
+    const user = await User.findByPk(req.user.id, {
+      include: Role
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        message: 'User not found'
+      });
+    }
+
+    const selectedRole = user.Roles.find(
+      (item) => item.code === role && item.isActive
+    );
+
+    if (!selectedRole) {
+      return res.status(403).json({
+        message: 'Role is not assigned or inactive'
+      });
+    }
+
+    const token = generateRoleToken(user, selectedRole.code);
+
+    return res.status(200).json({
+      message: 'Role selected successfully',
+      role: selectedRole.code,
+      token
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message
+    });
+  }
+};
+
+exports.getMyMenus = async (req, res) => {
+  try {
+    const activeRole = req.user.role;
+
+    if (!activeRole) {
+      return res.status(403).json({
+        message: 'Please select a role first'
+      });
+    }
+
+    const role = await Role.findOne({
+      where: {
+        code: activeRole,
+        isActive: true
+      },
+      include: [
+        {
+          model: Menu,
+          where: {
+            isActive: true
+          },
+          through: {
+            attributes: []
+          },
+          required: false
+        }
+      ]
+    });
+
+    if (!role) {
+      return res.status(404).json({
+        message: 'Role not found'
+      });
+    }
+
+    return res.status(200).json({
+      role: role.code,
+      menus: role.Menus
+    });
+  } catch (error) {
+    console.error('Get my menus error:', error);
+
+    return res.status(500).json({
+      message: 'Failed to retrieve menus',
       error: error.message
     });
   }

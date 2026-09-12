@@ -1,10 +1,19 @@
 module.exports = (...allowedRoles) => {
   return (req, res, next) => {
-    const userRoles = req.user?.roles || [];
-    const hasROle = userRoles.some((r) => allowedRoles.includes(r));
-    if (!hasROle) {
-      return res.status(403).json({ message: 'Forbidden Insufficient Role' });
+    if (req.user?.tokenType !== 'ACCESS') {
+      return res.status(403).json({
+        message: 'Please select a role first'
+      });
     }
+
+    const activeRole = req.user?.role;
+
+    if (!activeRole || !allowedRoles.includes(activeRole)) {
+      return res.status(403).json({
+        message: 'Forbidden Insufficient Role'
+      });
+    }
+
     next();
   };
 };
